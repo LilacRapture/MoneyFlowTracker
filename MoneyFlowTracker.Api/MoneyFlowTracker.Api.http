@@ -1,0 +1,6 @@
+@MoneyFlowTracker.Api_HostAddress = http://localhost:5206
+
+GET {{MoneyFlowTracker.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
