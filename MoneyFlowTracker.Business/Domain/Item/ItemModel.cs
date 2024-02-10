@@ -8,8 +8,8 @@ public class ItemModel
     public Guid Id { get; set; }
     public int AmountCents { get; set; }
     public string? Name { get; set; } = null;
-    public DateTime CreatedDate { get; set; }
+    public DateOnly CreatedDate { get; set; }
 
     public Guid CategoryId { get; set; }
-    public CategoryModel? Category { get; set; } = null;
+    public CategoryModel Category { get; set; } = null!;
 }
