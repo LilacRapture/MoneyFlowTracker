@@ -29,20 +29,27 @@ public class MoneyFlowTrackerDbContext : DbContext, IDataContext
 
         // Key
         itemBuilder.HasKey(i => i.Id);
+
         itemBuilder
             .HasOne(i => i.Category)
             .WithMany(c => c.Items)
             .HasForeignKey(i => i.CategoryId)
             .IsRequired()
         ;
-        
         // </- ItemModel -->
 
         // <-- CategoryModel -->
         var categoryBuilder = modelBuilder.Entity<CategoryModel>();
 
         // Key
-        categoryBuilder.HasKey(p => p.Id);
+        categoryBuilder.HasKey(c => c.Id);
+
+        categoryBuilder
+            .HasOne(c => c.ParentCategory)
+            .WithMany(c => c.ChildCategories)
+            .HasForeignKey(c => c.ParentCategoryId)
+            .IsRequired(false)
+        ;
         // </- CategoryModel -->
     }
 
