@@ -15,19 +15,19 @@ public class GetAnalyticsQueryRequest : IRequest<IEnumerable<AnalyticsRow>>
 public interface IAnalyticsRow
 {
     CategoryModel Category { get; set; }
-    int AmountTodayCents { get; set; }
-    int WeekChangePercent { get; set; }
-    int MonthChangePercent { get; set; }
-    int QuarterChangePercent { get; set; }
+    int? AmountTodayCents { get; set; }
+    int? WeekChangePercent { get; set; }
+    int? MonthChangePercent { get; set; }
+    int? QuarterChangePercent { get; set; }
 }
 
 public class AnalyticsRow : IAnalyticsRow
 {
     public required CategoryModel Category { get; set; }
-    public int AmountTodayCents { get; set; }
-    public int WeekChangePercent { get; set; }
-    public int MonthChangePercent { get; set; }
-    public int QuarterChangePercent { get; set; }
+    public int? AmountTodayCents { get; set; } = null;
+    public int? WeekChangePercent { get; set; } = null;
+    public int? MonthChangePercent { get; set; } = null;
+    public int? QuarterChangePercent { get; set; } = null;
 }
 
 public class GetAnalyticsQueryRequestHandler : IRequestHandler<GetAnalyticsQueryRequest, IEnumerable<AnalyticsRow>>
@@ -39,18 +39,63 @@ public class GetAnalyticsQueryRequestHandler : IRequestHandler<GetAnalyticsQuery
     }
     public async Task<IEnumerable<AnalyticsRow>> Handle(GetAnalyticsQueryRequest request, CancellationToken cancellationToken)
     {
-        var itemsGrouppedByCategory = await _dataContext.Items
+        var itemsByCategoryToday = await _dataContext.Items
             .Include(i => i.Category)
             .Where(item => item.CreatedDate == request.Date)
             .GroupBy(i => i.Category)
-            .ToArrayAsync();
+            .ToDictionaryAsync(g => g.Key, g => g.Sum(i => i.AmountCents));
 
-        var analyticsRows = itemsGrouppedByCategory
-            .ToDictionary(g => g.Key, g => g.Sum(i => i.AmountCents))
-            .Select(kvp => new AnalyticsRow { 
-                Category = kvp.Key,
-                AmountTodayCents = kvp.Value,
-            });
+        var itemsByCategoryWeekAgo = await _dataContext.Items
+            .Include(i => i.Category)
+            .Where(item => item.CreatedDate == request.Date.AddDays(-7))
+            .GroupBy(i => i.Category)
+            .ToDictionaryAsync(g => g.Key, g => g.Sum(i => i.AmountCents));
+
+        var itemsByCategoryMonthAgo = await _dataContext.Items
+            .Include(i => i.Category)
+            .Where(item => item.CreatedDate == request.Date.AddMonths(-1))
+            .GroupBy(i => i.Category)
+            .ToDictionaryAsync(g => g.Key, g => g.Sum(i => i.AmountCents));
+
+        var itemsByCategory3MonthsAgo = await _dataContext.Items
+            .Include(i => i.Category)
+            .Where(item => item.CreatedDate == request.Date.AddMonths(-3))
+            .GroupBy(i => i.Category)
+            .ToDictionaryAsync(g => g.Key, g => g.Sum(i => i.AmountCents));
+
+        var categories = await _dataContext.Category.ToArrayAsync();
+        var analyticsRows = new List<AnalyticsRow>();
+
+        foreach (var category in categories)
+        {
+            if (itemsByCategoryToday.ContainsKey(category))
+            {
+                var amountCentsToday = itemsByCategoryToday[category];
+                var amountWeekAgo = itemsByCategoryWeekAgo.ContainsKey(category) ? itemsByCategoryWeekAgo[category] : 0;
+                var weekChangePercent = (itemsByCategoryWeekAgo[category] - amountCentsToday) / amountCentsToday * 100;
+
+                var amountMonthAgo = itemsByCategoryMonthAgo.ContainsKey(category) ? itemsByCategoryMonthAgo[category] : 0;
+                var monthChangePercent = (itemsByCategoryMonthAgo[category] - amountCentsToday) / amountCentsToday * 100;
+
+                var amount3MonthsAgo = itemsByCategory3MonthsAgo.ContainsKey(category) ? itemsByCategory3MonthsAgo[category] : 0;
+                var quarterChangePercent = (itemsByCategory3MonthsAgo[category] - amountCentsToday) / amountCentsToday * 100;
+                var analyticsRow = new AnalyticsRow
+                {
+                    Category = category,
+                    WeekChangePercent = weekChangePercent,
+                    MonthChangePercent = monthChangePercent,
+                    QuarterChangePercent = quarterChangePercent,
+                };
+                analyticsRows.Add(analyticsRow);
+            }
+            else
+            {
+                var analyticsRow = new AnalyticsRow
+                {
+                    Category = category,
+                };
+            }
+        }
 
         return analyticsRows;
     }
