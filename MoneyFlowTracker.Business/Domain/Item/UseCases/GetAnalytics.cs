@@ -68,20 +68,21 @@ public class GetAnalyticsQueryRequestHandler : IRequestHandler<GetAnalyticsQuery
 
         foreach (var category in categories)
         {
-            if (itemsByCategoryToday.ContainsKey(category))
+            if (itemsByCategoryToday.ContainsKey(category) && itemsByCategoryToday[category] != 0)
             {
                 var amountCentsToday = itemsByCategoryToday[category];
                 var amountWeekAgo = itemsByCategoryWeekAgo.ContainsKey(category) ? itemsByCategoryWeekAgo[category] : 0;
-                var weekChangePercent = (itemsByCategoryWeekAgo[category] - amountCentsToday) / amountCentsToday * 100;
+                var weekChangePercent = (amountWeekAgo - amountCentsToday) / amountCentsToday * 100;
 
                 var amountMonthAgo = itemsByCategoryMonthAgo.ContainsKey(category) ? itemsByCategoryMonthAgo[category] : 0;
-                var monthChangePercent = (itemsByCategoryMonthAgo[category] - amountCentsToday) / amountCentsToday * 100;
+                var monthChangePercent = (amountMonthAgo - amountCentsToday) / amountCentsToday * 100;
 
                 var amount3MonthsAgo = itemsByCategory3MonthsAgo.ContainsKey(category) ? itemsByCategory3MonthsAgo[category] : 0;
-                var quarterChangePercent = (itemsByCategory3MonthsAgo[category] - amountCentsToday) / amountCentsToday * 100;
+                var quarterChangePercent = (amount3MonthsAgo - amountCentsToday) / amountCentsToday * 100;
                 var analyticsRow = new AnalyticsRow
                 {
                     Category = category,
+                    AmountTodayCents = amountCentsToday,
                     WeekChangePercent = weekChangePercent,
                     MonthChangePercent = monthChangePercent,
                     QuarterChangePercent = quarterChangePercent,
