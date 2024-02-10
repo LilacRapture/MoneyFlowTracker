@@ -39,14 +39,12 @@ public class GetAnalyticsQueryRequestHandler : IRequestHandler<GetAnalyticsQuery
     }
     public async Task<IEnumerable<AnalyticsRow>> Handle(GetAnalyticsQueryRequest request, CancellationToken cancellationToken)
     {
-        DateTime todayStartDate = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-        DateTime todayEndDate = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MaxValue), DateTimeKind.Utc);
         var itemsGrouppedByCategory = await _dataContext.Items
             .Include(i => i.Category)
-            .Where(item => item.CreatedDate >= todayStartDate &&
-                           item.CreatedDate <= todayEndDate)
+            .Where(item => item.CreatedDate == request.Date)
             .GroupBy(i => i.Category)
             .ToArrayAsync();
+
         var analyticsRows = itemsGrouppedByCategory
             .ToDictionary(g => g.Key, g => g.Sum(i => i.AmountCents))
             .Select(kvp => new AnalyticsRow { 

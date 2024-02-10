@@ -11,7 +11,7 @@ public static class AddItemQueryApi
         public required Guid Id { get; set; }
         public required Guid CategoryId { get; set; }
         public required int AmountCents { get; set; }
-        public required DateTime CreatedDate { get; set; }
+        public required DateOnly CreatedDate { get; set; }
     }
 
     public static async Task<IResult> Handler([FromBody] AddItemRequestDto request, [FromServices] IMediator mediator)
