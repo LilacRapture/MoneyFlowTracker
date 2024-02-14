@@ -39,6 +39,7 @@ app.UseHttpsRedirection();
 app.MapGet("/api/items", GetAllItemsQueryApi.Handler);
 app.MapGet("/api/items/{id}", GetItemQueryApi.Handler);
 app.MapGet("/api/analytics/{date}", GetAnalyticsQueryApi.Handler);
+app.MapGet("/api/analytics/chart", GetAnalyticsChartQueryApi.Handler);
 app.MapPost("/api/items", AddItemQueryApi.Handler);
 
 
