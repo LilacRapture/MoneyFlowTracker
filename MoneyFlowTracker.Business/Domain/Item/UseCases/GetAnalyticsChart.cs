@@ -70,6 +70,8 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
             .ToDictionaryAsync(g => g.Key, g => g.ToList())
         ;
 
+        // TODO: Take into account sub-categories within a category,
+        // e.g. total of ЗП should include totals of ЗП повар, ЗП бар, etc
         var analyticsChart = itemsByCategory.Select(kvp => new AnalyticsChart {
             Category = kvp.Key,
             Weeks = kvp.Value.GroupBy(
