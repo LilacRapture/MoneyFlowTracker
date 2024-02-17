@@ -26,6 +26,15 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
 // Custom Services
 builder.Services.AddTransient<IDataContext, MoneyFlowTrackerDbContext>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder => builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+    );
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,6 +44,7 @@ app.UseSwaggerUI();
 
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAll");
 
 app.MapGet("/api/items", GetAllItemsQueryApi.Handler);
 app.MapGet("/api/items/{id}", GetItemQueryApi.Handler);
