@@ -9,6 +9,7 @@ public class AddItemQueryRequest : IRequest
 {
     public required Guid Id { get; set; }
     public required Guid CategoryId { get; set; }
+    public string? Name { get; set; } = null;
     public required int AmountCents { get; set; }
     public required DateOnly CreatedDate { get; set; }
 }
@@ -26,6 +27,7 @@ public class AddItemQueryRequestHandler : IRequestHandler<AddItemQueryRequest>
         {
             Id = request.Id,
             CategoryId = request.CategoryId,
+            Name = request.Name,
             AmountCents = request.AmountCents,
             CreatedDate = request.CreatedDate,
         };
