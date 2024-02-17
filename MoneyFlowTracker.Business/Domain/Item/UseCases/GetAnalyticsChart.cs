@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class GetAnalyticsChartQueryRequest : IRequest<IEnumerable<IAnalyticsChart>>
 {
@@ -39,18 +40,46 @@ public class AnalyticsPeriod : IAnalyticsPeriod
             EndDate = startDate.AddDays(6),
         }; 
     }
+    public static AnalyticsPeriod CreateMonth(int amountCents, DateOnly date)
+    {
+        var startDate = new DateOnly(date.Year, date.Month, 1);
+
+        return new AnalyticsPeriod
+        {
+            AmountCents = amountCents,
+            StartDate = startDate,
+            EndDate = startDate.AddMonths(1).AddDays(-1),
+        };
+    }
+
+    public static AnalyticsPeriod CreateQuartal(int amountCents, DateOnly date)
+    {
+        var startDate = new DateOnly(date.Year, date.Month, 1);
+        startDate = startDate.AddMonths(-3);
+
+        return new AnalyticsPeriod
+        {
+            AmountCents = amountCents,
+            StartDate = startDate,
+            EndDate = startDate.AddMonths(3).AddDays(-1),
+        };
+    }
 }
 
 public interface IAnalyticsChart
 {
     CategoryModel Category { get; }
     IEnumerable<IAnalyticsPeriod> Weeks {  get; }
+    IEnumerable<IAnalyticsPeriod> Months { get; }
+    IEnumerable<IAnalyticsPeriod> Quartals { get; }
 }
 
 public class AnalyticsChart : IAnalyticsChart
 {
     public required CategoryModel Category { get; set; }
     public IEnumerable<IAnalyticsPeriod> Weeks { get; set; } = Enumerable.Empty<IAnalyticsPeriod>();
+    public IEnumerable<IAnalyticsPeriod> Months { get; set; } = Enumerable.Empty<IAnalyticsPeriod>();
+    public IEnumerable<IAnalyticsPeriod> Quartals { get; set; } = Enumerable.Empty<IAnalyticsPeriod>();
 }
 
 
@@ -75,7 +104,15 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
             Weeks = kvp.Value.GroupBy(
                 i => DateHelper.GetWeekOfYear(i.CreatedDate),
                 (k, g) => AnalyticsPeriod.CreateWeek(g.Sum(i => i.AmountCents), k, request.Date.Year)
-            )
+            ),
+            Months = kvp.Value.GroupBy(
+                i => i.CreatedDate.Month,
+                (k, g) => AnalyticsPeriod.CreateMonth(g.Sum(i => i.AmountCents), request.Date)
+            ),
+            Quartals = kvp.Value.GroupBy(
+                i => i.CreatedDate.Month,
+                (k, g) => AnalyticsPeriod.CreateQuartal(g.Sum(i => i.AmountCents), request.Date)
+            ),
         });
 
         return analyticsChart; 
