@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: money-flow-tracker-api
+    env: docker
+    region: frankfurt
+    plan: free
