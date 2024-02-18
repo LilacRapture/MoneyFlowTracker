@@ -25,6 +25,7 @@ public static class AddItemQueryApi
             AmountCents = request.AmountCents,
             CreatedDate = request.CreatedDate
         });
-        return TypedResults.Ok();
+
+        return TypedResults.Ok(new object());
     }
 }

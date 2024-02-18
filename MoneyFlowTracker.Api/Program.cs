@@ -50,6 +50,7 @@ app.UseCors("AllowAll");
 // Item
 app.MapGet("/api/items/{date}", GetItemsByDateQueryApi.Handler);
 app.MapGet("/api/items/{id:Guid}", GetItemQueryApi.Handler);
+app.MapPut("/api/items/", UpdateItemQueryApi.Handler);
 app.MapPost("/api/items/", AddItemQueryApi.Handler);
 
 // Category
