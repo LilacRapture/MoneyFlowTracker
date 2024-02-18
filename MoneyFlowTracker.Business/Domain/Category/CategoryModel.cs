@@ -11,6 +11,7 @@ public class CategoryModel
     public bool IsIncome {  get; set; }
 
     public Guid? ParentCategoryId { get; set; } = null;
+    [JsonIgnore]
     public CategoryModel? ParentCategory { get; set; } = null;
     [JsonIgnore]
     public ICollection<CategoryModel> ChildCategories { get; } = [];

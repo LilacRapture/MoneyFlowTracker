@@ -4,12 +4,14 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MoneyFlowTracker.Business.Domain.Item.UseCases;
 
-public static class GetAllItemsQueryApi
+public static class GetItemsByDateQueryApi
 {
-    // TODO: Get items by date
-    public static async Task<IResult> Handler([FromServices] IMediator mediator)
+    public static async Task<IResult> Handler([FromRoute] DateTime date, [FromServices] IMediator mediator)
     {
-        var items = await mediator.Send(new GetAllItemsQueryRequest());
+        var items = await mediator.Send(new GetAllItemsQueryRequest
+        {
+            Date = DateOnly.FromDateTime(date),
+        });
         if (items == null)
         {
             return TypedResults.NotFound();

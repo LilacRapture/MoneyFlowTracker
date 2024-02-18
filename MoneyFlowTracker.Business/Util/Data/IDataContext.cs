@@ -3,7 +3,6 @@
 using Microsoft.EntityFrameworkCore;
 using MoneyFlowTracker.Business.Domain.Category;
 using MoneyFlowTracker.Business.Domain.Item;
-using MoneyFlowTracker.Business.Domain.Item.UseCases;
 
 public interface IDataContext
 {
