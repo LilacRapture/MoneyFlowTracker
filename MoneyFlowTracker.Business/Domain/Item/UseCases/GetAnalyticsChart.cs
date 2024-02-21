@@ -7,6 +7,7 @@ using MoneyFlowTracker.Business.Util;
 using MoneyFlowTracker.Business.Util.Data;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -92,31 +93,39 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
     }
     public async Task<IEnumerable<IAnalyticsChart>> Handle(GetAnalyticsChartQueryRequest request, CancellationToken cancellationToken)
     {
-        var itemsByCategory = await _dataContext.Items
+        var items = await _dataContext.Items
             .Include(i => i.Category)
             .Where(item => item.CreatedDate.Year == request.Date.Year)
-            .GroupBy(i => i.Category)
-            .ToDictionaryAsync(g => g.Key, g => g.ToList())
+            .ToListAsync()
         ;
 
-        // TODO: Take into account sub-categories within a category,
-        // e.g. total of ЗП should include totals of ЗП повар, ЗП бар, etc
-        var analyticsChart = itemsByCategory.Select(kvp => new AnalyticsChart {
-            Category = kvp.Key,
-            Weeks = kvp.Value.GroupBy(
-                i => DateHelper.GetWeekOfYear(i.CreatedDate),
-                (k, g) => AnalyticsPeriod.CreateWeek(g.Sum(i => i.AmountCents), k, request.Date.Year)
-            ),
-            Months = kvp.Value.GroupBy(
-                i => i.CreatedDate.Month,
-                (k, g) => AnalyticsPeriod.CreateMonth(g.Sum(i => i.AmountCents), request.Date)
-            ),
-            Quartals = kvp.Value.GroupBy(
-                i => i.CreatedDate.Month,
-                (k, g) => AnalyticsPeriod.CreateQuartal(g.Sum(i => i.AmountCents), request.Date)
-            ),
-        });
+        var analyticsCharts = new List<AnalyticsChart>();
 
-        return analyticsChart; 
+        var categories = await _dataContext.Category.ToListAsync();
+        foreach (var category in categories)
+        {
+            var analyticsWeeks = new List<AnalyticsPeriod>();
+            for (
+                var currentWeekStartDate = new DateOnly(request.Date.Year, 1, 1);
+                currentWeekStartDate < request.Date;
+                currentWeekStartDate = currentWeekStartDate.AddDays(7)
+            )
+            {
+                var currentWeekNumber = DateHelper.GetWeekOfYear(currentWeekStartDate);
+                var total = items
+                    .Where(i => DateHelper.GetWeekOfYear(i.CreatedDate) == currentWeekNumber)
+                    .Where(i => i.Category == category)
+                    .Sum(i => i.AmountCents);
+                analyticsWeeks.Add(AnalyticsPeriod.CreateWeek(total, currentWeekNumber, request.Date.Year));
+            }
+            var analyticsChart = new AnalyticsChart 
+            { 
+                Category = category,
+                Weeks = analyticsWeeks,
+            };
+            analyticsCharts.Add(analyticsChart);
+        }
+
+        return analyticsCharts;
     }
 }
