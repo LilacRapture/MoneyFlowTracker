@@ -20,6 +20,7 @@ public class GetAnalyticsChartQueryRequest : IRequest<IEnumerable<IAnalyticsChar
 public interface IAnalyticsPeriod
 {
     int AmountCents { get; }
+    int AmountWithSubcategories { get; }
     DateOnly StartDate { get; }
     DateOnly EndDate { get; }
 }
@@ -27,39 +28,43 @@ public interface IAnalyticsPeriod
 public class AnalyticsPeriod : IAnalyticsPeriod
 {
     public int AmountCents { get; set; }
+    public int AmountWithSubcategories { get; set; }
     public DateOnly StartDate { get; set; }
     public DateOnly EndDate { get; set; }
 
-    public static AnalyticsPeriod CreateWeek(int amountCents, int weekNumber, int year)
+    public static AnalyticsPeriod CreateWeek(int amountCents, int amountWithSubcategories, int weekNumber, int year)
     {
         var startDate = DateHelper.GetWeekDateOnly(year, weekNumber);
 
         return new AnalyticsPeriod
         {
             AmountCents = amountCents,
+            AmountWithSubcategories = amountWithSubcategories,
             StartDate = startDate,
             EndDate = startDate.AddDays(6),
         }; 
     }
-    public static AnalyticsPeriod CreateMonth(int amountCents, int month, int year)
+    public static AnalyticsPeriod CreateMonth(int amountCents, int amountWithSubcategories, int month, int year)
     {
         var startDate = new DateOnly(year, month, 1);
 
         return new AnalyticsPeriod
         {
             AmountCents = amountCents,
+            AmountWithSubcategories = amountWithSubcategories,
             StartDate = startDate,
             EndDate = startDate.AddMonths(1).AddDays(-1),
         };
     }
 
-    public static AnalyticsPeriod CreateQuarter(int amountCents, int month, int year)
+    public static AnalyticsPeriod CreateQuarter(int amountCents, int amountWithSubcategories, int month, int year)
     {
         var startDate = new DateOnly(year, (month - 1) / 3 * 3 + 1, 1);
 
         return new AnalyticsPeriod
         {
             AmountCents = amountCents,
+            AmountWithSubcategories = amountWithSubcategories,
             StartDate = startDate,
             EndDate = startDate.AddMonths(3).AddDays(-1),
         };
@@ -118,7 +123,11 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
                     .Where(i => DateHelper.GetWeekOfYear(i.CreatedDate) == currentWeekNumber)
                     .Where(i => i.Category == category)
                     .Sum(i => i.AmountCents);
-                analyticsWeeks.Add(AnalyticsPeriod.CreateWeek(totalByWeek, currentWeekNumber, request.Date.Year));
+                var totalWithSubcategories = items
+                    .Where(i => DateHelper.GetWeekOfYear(i.CreatedDate) == currentWeekNumber)
+                    .Where(i => i.Category == category | i.Category.ParentCategoryId == category.Id)
+                    .Sum(i => i.AmountCents);
+                analyticsWeeks.Add(AnalyticsPeriod.CreateWeek(totalByWeek, totalWithSubcategories, currentWeekNumber, request.Date.Year));
             }
 
             for (
@@ -131,7 +140,11 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
                     .Where(i => i.CreatedDate.Month == currentMonthStartDate.Month)
                     .Where(i => i.Category == category)
                     .Sum(i => i.AmountCents);
-                analyticsMonths.Add(AnalyticsPeriod.CreateMonth(totalByMonth, currentMonthStartDate.Month, request.Date.Year));
+                var totalWithSubcategories = items
+                    .Where(i => i.CreatedDate.Month == currentMonthStartDate.Month)
+                    .Where(i => i.Category == category | i.Category.ParentCategoryId == category.Id)
+                    .Sum(i => i.AmountCents);
+                analyticsMonths.Add(AnalyticsPeriod.CreateMonth(totalByMonth, totalWithSubcategories, currentMonthStartDate.Month, request.Date.Year));
             }
 
             for (
@@ -140,12 +153,16 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
                 currentQuarterStartDate = currentQuarterStartDate.AddMonths(3)
             )
             {
-                var currentQuarterEndMonth = currentQuarterStartDate.AddMonths(3).Month;
+                var currentQuarterEndMonth = currentQuarterStartDate.AddMonths(2).Month;
                 var totalByQuarter = items
                     .Where(i => i.CreatedDate.Month >= currentQuarterStartDate.Month && i.CreatedDate.Month <= currentQuarterEndMonth)
                     .Where(i => i.Category == category)
                     .Sum(i => i.AmountCents);
-                analyticsQuarters.Add(AnalyticsPeriod.CreateQuarter(totalByQuarter, currentQuarterStartDate.Month, request.Date.Year));
+                var totalWithSubcategories = items
+                    .Where(i => i.CreatedDate.Month >= currentQuarterStartDate.Month && i.CreatedDate.Month <= currentQuarterEndMonth)
+                    .Where(i => i.Category == category | i.Category.ParentCategoryId == category.Id)
+                    .Sum(i => i.AmountCents);
+                analyticsQuarters.Add(AnalyticsPeriod.CreateQuarter(totalByQuarter, totalWithSubcategories, currentQuarterStartDate.Month, request.Date.Year));
             }
 
             var analyticsChart = new AnalyticsChart
