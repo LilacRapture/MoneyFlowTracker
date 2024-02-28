@@ -99,7 +99,8 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
         var analyticsCharts = new List<AnalyticsChart>();
         var categories = await _dataContext.Category.ToListAsync();
         var analyticsDaysByCategoryId = new Dictionary<Guid, List<AnalyticsPeriod>>();
-        foreach (var category in categories.OrderBy(c => c.ParentCategoryId.HasValue ? 0 : 1))
+        
+        foreach (var category in categories.Where(c => c.Id != Categories.Income && c.Id != Categories.Expenses))
         {
             var analyticsDays = new List<AnalyticsPeriod>();
             for (
@@ -113,6 +114,31 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
                     .Where(i => i.Category.Id == category.Id || i.Category.ParentCategoryId == category.Id)
                     .Sum(i => i.AmountCents);
                 analyticsDays.Add(AnalyticsPeriod.Create(totalByDay, currentDay, currentDay));
+            }
+
+            analyticsDaysByCategoryId.Add(category.Id, analyticsDays);
+        }
+
+        foreach (var category in categories.Where(c => c.Id == Categories.Income || c.Id == Categories.Expenses))
+        {
+            var analyticsDays = new List<AnalyticsPeriod>();
+            for (
+                var currentDay = new DateOnly(request.Date.Year, 1, 1);
+                currentDay < request.Date;
+                currentDay = currentDay.AddDays(1)
+            )
+            {
+                var categoryTotalByDay = items
+                    .Where(i => i.CreatedDate == currentDay)
+                    .Where(i => i.Category.Id == category.Id)
+                    .Sum(i => i.AmountCents);
+                var subcategoryTotalByDay = categories
+                    .Where(c => c.ParentCategoryId == category.Id)
+                    .Sum(c => analyticsDaysByCategoryId[c.Id]
+                        .Where(p => p.StartDate == currentDay)
+                        .Sum(p => p.AmountCents)
+                    );
+                analyticsDays.Add(AnalyticsPeriod.Create(categoryTotalByDay + subcategoryTotalByDay, currentDay, currentDay));
             }
 
             analyticsDaysByCategoryId.Add(category.Id, analyticsDays);
