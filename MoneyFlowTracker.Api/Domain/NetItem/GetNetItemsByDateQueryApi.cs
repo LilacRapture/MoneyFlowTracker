@@ -1,14 +1,14 @@
-﻿namespace MoneyFlowTracker.Api.Domain.Item;
+﻿namespace MoneyFlowTracker.Api.Domain.NetItem;
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using MoneyFlowTracker.Business.Domain.Item.UseCases;
+using MoneyFlowTracker.Business.Domain.NetItem.UseCases;
 
-public static class GetItemsByDateQueryApi
+public static class GetNetItemsByDateQueryApi
 {
     public static async Task<IResult> Handler([FromRoute] DateTime date, [FromServices] IMediator mediator)
     {
-        var items = await mediator.Send(new GetItemsByDateQueryRequest
+        var items = await mediator.Send(new GetNetItemsByDateQueryRequest
         {
             Date = DateOnly.FromDateTime(date),
         });

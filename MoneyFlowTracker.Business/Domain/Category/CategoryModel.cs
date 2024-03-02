@@ -1,6 +1,7 @@
 ﻿namespace MoneyFlowTracker.Business.Domain.Category;
 
 using MoneyFlowTracker.Business.Domain.Item;
+using MoneyFlowTracker.Business.Domain.NetItem;
 using System.Text.Json.Serialization;
 
 
@@ -18,4 +19,6 @@ public class CategoryModel
 
     [JsonIgnore]
     public ICollection<ItemModel> Items { get; } = [];
+    [JsonIgnore]
+    public ICollection<NetItemModel> NetItems { get; } = [];
 }
