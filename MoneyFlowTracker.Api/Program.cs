@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MoneyFlowTracker.Api.Domain.Category;
 using MoneyFlowTracker.Api.Domain.Item;
+using MoneyFlowTracker.Api.Domain.NetItem;
 using MoneyFlowTracker.Business.Util;
 using MoneyFlowTracker.Business.Util.Data;
 using MoneyFlowTracker.Infrastructure.Data;
@@ -51,6 +52,11 @@ app.UseCors("AllowAll");
 app.MapGet("/api/items/{date}", GetItemsByDateQueryApi.Handler);
 app.MapGet("/api/items/{id:Guid}", GetItemQueryApi.Handler);
 app.MapPost("/api/items/", UpsertItemQueryApi.Handler);
+
+// Net Item
+app.MapGet("/api/items/net/{date}", GetNetItemsByDateQueryApi.Handler);
+app.MapGet("/api/items/net/{id:Guid}", GetNetItemQueryApi.Handler);
+app.MapPost("/api/items/net/", UpsertNetItemQueryApi.Handler);
 
 // Category
 app.MapGet("/api/categories", GetAllCategoriesQueryApi.Handler);

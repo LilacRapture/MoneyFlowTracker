@@ -1,12 +1,12 @@
-﻿namespace MoneyFlowTracker.Api.Domain.Item;
+﻿namespace MoneyFlowTracker.Api.Domain.NetItem;
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using MoneyFlowTracker.Business.Domain.Item.UseCases;
+using MoneyFlowTracker.Business.Domain.NetItem.UseCases;
 
-public static class AddItemQueryApi
+public static class UpsertNetItemQueryApi
 {
-    public class AddItemRequestDto
+    public class UpsertNetItemRequestDto
     {
         public required Guid Id { get; set; }
         public required Guid CategoryId { get; set; }
@@ -15,9 +15,9 @@ public static class AddItemQueryApi
         public required DateOnly CreatedDate { get; set; }
     }
 
-    public static async Task<IResult> Handler([FromBody] AddItemRequestDto request, [FromServices] IMediator mediator)
+    public static async Task<IResult> Handler([FromBody] UpsertNetItemRequestDto request, [FromServices] IMediator mediator)
     {
-        await mediator.Send(new AddItemQueryRequest
+        await mediator.Send(new UpsertNetItemQueryRequest
         {
             Id = request.Id,
             CategoryId = request.CategoryId,

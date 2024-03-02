@@ -3,6 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using MoneyFlowTracker.Business.Domain.Category;
 using MoneyFlowTracker.Business.Domain.Item;
+using MoneyFlowTracker.Business.Domain.NetItem;
 using MoneyFlowTracker.Business.Util.Data;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ public class MoneyFlowTrackerDbContext : DbContext, IDataContext
     }
 
     public DbSet<ItemModel> Items { get; set; }
+    public DbSet<NetItemModel> NetItems { get; set; }
     public DbSet<CategoryModel> Category { get; set; }
 
     async Task IDataContext.SaveChanges(CancellationToken cancellationToken)
@@ -24,8 +26,8 @@ public class MoneyFlowTrackerDbContext : DbContext, IDataContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // <-- ItemModel -->
-        var itemBuilder = modelBuilder.Entity<ItemModel>();
+        // <-- Items -->
+        var itemBuilder = modelBuilder.Entity<ItemModel>().ToTable("Items");
 
         // Key
         itemBuilder.HasKey(i => i.Id);
@@ -36,7 +38,21 @@ public class MoneyFlowTrackerDbContext : DbContext, IDataContext
             .HasForeignKey(i => i.CategoryId)
             .IsRequired()
         ;
-        // </- ItemModel -->
+        // </- Items -->
+
+        // <-- NetItems -->
+        var netItemBuilder = modelBuilder.Entity<NetItemModel>().ToTable("NetItems");
+
+        // Key
+        netItemBuilder.HasKey(i => i.Id);
+
+        netItemBuilder
+            .HasOne(i => i.Category)
+            .WithMany(c => c.NetItems)
+            .HasForeignKey(i => i.CategoryId)
+            .IsRequired()
+        ;
+        // </- NetItems -->
 
         // <-- CategoryModel -->
         var categoryBuilder = modelBuilder.Entity<CategoryModel>();
