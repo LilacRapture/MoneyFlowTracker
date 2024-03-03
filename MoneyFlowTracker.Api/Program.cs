@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MoneyFlowTracker.Api.Domain.Category;
 using MoneyFlowTracker.Api.Domain.Item;
 using MoneyFlowTracker.Api.Domain.NetItem;
+using MoneyFlowTracker.Api.Util.Mapper;
 using MoneyFlowTracker.Business.Util;
 using MoneyFlowTracker.Business.Util.Data;
 using MoneyFlowTracker.Infrastructure.Data;
@@ -17,7 +18,7 @@ builder.Services.AddDbContextPool<MoneyFlowTrackerDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Dev"))
 );
 // Mapper
-// builder.Services.AddAutoMapper(typeof(InspirerMapperProfile));
+builder.Services.AddAutoMapper(typeof(MoneyFlowTrackerMapperProfile));
 
 // MediatR
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
