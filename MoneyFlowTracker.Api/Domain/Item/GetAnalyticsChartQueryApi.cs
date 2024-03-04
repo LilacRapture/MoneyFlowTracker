@@ -2,7 +2,7 @@
 
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using MoneyFlowTracker.Business.Domain.Item.UseCases;
+using MoneyFlowTracker.Business.Domain.Chart.UseCases;
 
 public class GetAnalyticsChartQueryApi
 {
