@@ -96,27 +96,31 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
 
 
     private const string CustomIncomeIdString = "b1488d86-353a-4e89-a890-de1ecb6ba9bb";
-    private static Guid BuildCustomCategoryId(Guid categoryId) => categoryId.ToString() switch
-    {
-        Categories.IncomeString => Guid.Parse(CustomIncomeIdString),
-        Categories.CashString => Guid.Parse("8bbce42f-f440-4784-8fe1-3c70da523a4e"),
-        Categories.TerminalString => Guid.Parse("a7748246-cd7d-4dcb-b217-5a5c100cf0a9"),
-        Categories.DeliveryString => Guid.Parse("e56f662d-696b-47ca-952e-fa2b9271584d"),
-        _ => throw new Exception($"No custom id for category '{categoryId}'"),
-    };
+    private static Guid BuildCustomCategoryId(Guid categoryId) =>
+        categoryId.ToString() switch
+        {
+            Categories.IncomeString => Guid.Parse(CustomIncomeIdString),
+            Categories.CashString => Guid.Parse("8bbce42f-f440-4784-8fe1-3c70da523a4e"),
+            Categories.TerminalString => Guid.Parse("a7748246-cd7d-4dcb-b217-5a5c100cf0a9"),
+            Categories.DeliveryString => Guid.Parse("e56f662d-696b-47ca-952e-fa2b9271584d"),
+            _ => throw new Exception($"No custom id for category '{categoryId}'"),
+        }
+    ;
 
     private static Guid? BuildCustomCategoryParentId(Guid? categoryId) =>
         categoryId == null ? null : Guid.Parse(CustomIncomeIdString)
     ;
 
-    private static string BuildCustomCategoryName(string categoryId) => categoryId switch
-    {
-        Categories.IncomeString => "Чистый Приход",
-        Categories.CashString => "Грязный Нал",
-        Categories.TerminalString => "Чистый Терминал",
-        Categories.DeliveryString => "Чистая Доставка",
-        _ => throw new Exception($"No custom name for category '{categoryId}'"),
-    };
+    private static string BuildCustomCategoryName(string categoryId) =>
+        categoryId switch
+        {
+            Categories.IncomeString => "Чистый Приход",
+            Categories.CashString => "Грязный Нал",
+            Categories.TerminalString => "Чистый Терминал",
+            Categories.DeliveryString => "Чистая Доставка",
+            _ => throw new Exception($"No custom name for category '{categoryId}'"),
+        }
+    ;
 
     private static ItemModel MapItemToCustomItem(ItemModel item, CategoryModel customCategory) =>
         new()
