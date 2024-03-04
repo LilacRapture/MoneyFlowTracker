@@ -118,15 +118,17 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
         _ => throw new Exception($"No custom name for category '{categoryId}'"),
     };
 
-    private static ItemModel MapItemToCustomItem(ItemModel item, CategoryModel customCategory) => new()
-    {
-        Id = item.Id,
-        Name = item.Name,
-        AmountCents = item.AmountCents,
-        CreatedDate = item.CreatedDate,
-        CategoryId = customCategory.Id,
-        Category = customCategory,
-    };
+    private static ItemModel MapItemToCustomItem(ItemModel item, CategoryModel customCategory) =>
+        new()
+        {
+            Id = item.Id,
+            Name = item.Name,
+            AmountCents = item.AmountCents,
+            CreatedDate = item.CreatedDate,
+            CategoryId = customCategory.Id,
+            Category = customCategory,
+        }
+    ;
 }
 
 
