@@ -9,15 +9,27 @@ public class GetAnalyticsChartQueryApi
     // TODO: In case of an exception response with 500 with an instance of ErrorResponse class in the body
     public static async Task<IResult> Handler([FromServices] IMediator mediator)
     {
-        var analyticsChart = await mediator.Send(new GetAnalyticsChartQueryRequest
+        var dateNow = DateOnly.FromDateTime(DateTime.Now);
+
+        var analyticsCharts = await mediator.Send(new GetAnalyticsChartQueryRequest
         {
-            Date = DateOnly.FromDateTime(DateTime.Now),
+            Date = dateNow,
         });
-        if (analyticsChart == null)
+        if (analyticsCharts == null)
         {
             return TypedResults.NotFound();
         }
 
-        return TypedResults.Ok(analyticsChart);
+        var customAnalyticsCharts = await mediator.Send(new GetAnalyticsChartCustomQueryRequest
+        {
+            Date = dateNow,
+        });
+        if (analyticsCharts == null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var allAnalyticsCharts = analyticsCharts.Concat(customAnalyticsCharts);
+        return TypedResults.Ok(allAnalyticsCharts);
     }
 }

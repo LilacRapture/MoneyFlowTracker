@@ -3,6 +3,7 @@
 using MoneyFlowTracker.Business.Domain.Category;
 using System;
 
+
 public class NetItemModel
 {
     public Guid Id { get; set; }

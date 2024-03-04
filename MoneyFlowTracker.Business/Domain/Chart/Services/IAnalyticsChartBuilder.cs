@@ -6,5 +6,5 @@ using MoneyFlowTracker.Business.Domain.Item;
 
 public interface IAnalyticsChartBuilder
 {
-    IEnumerable<AnalyticsChart> Build(DateOnly date, IEnumerable<ItemModel> items, IEnumerable<CategoryModel> categories);
+    IEnumerable<AnalyticsChart> Build(IEnumerable<ItemModel> items, IEnumerable<CategoryModel> categories, DateOnly date);
 }

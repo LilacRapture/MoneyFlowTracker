@@ -3,6 +3,7 @@ using MoneyFlowTracker.Api.Domain.Category;
 using MoneyFlowTracker.Api.Domain.Item;
 using MoneyFlowTracker.Api.Domain.NetItem;
 using MoneyFlowTracker.Api.Util.Mapper;
+using MoneyFlowTracker.Business.Domain.Chart.Services;
 using MoneyFlowTracker.Business.Util;
 using MoneyFlowTracker.Business.Util.Data;
 using MoneyFlowTracker.Infrastructure.Data;
@@ -28,6 +29,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
 
 // Custom Services
 builder.Services.AddTransient<IDataContext, MoneyFlowTrackerDbContext>();
+builder.Services.AddTransient<IAnalyticsChartBuilder, AnalyticsChartBuilder>();
 
 builder.Services.AddCors(options =>
 {

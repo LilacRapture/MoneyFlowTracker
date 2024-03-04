@@ -2,10 +2,7 @@
 
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using MoneyFlowTracker.Business.Domain.Category;
 using MoneyFlowTracker.Business.Domain.Chart.Services;
-using MoneyFlowTracker.Business.Domain.Item;
-using MoneyFlowTracker.Business.Util;
 using MoneyFlowTracker.Business.Util.Data;
 using System;
 using System.Collections.Generic;
@@ -36,7 +33,7 @@ public class GetAnalyticsChartQueryRequestHandler(
         ;
 
         var categories = await _dataContext.Category.ToListAsync(cancellationToken: cancellationToken);
-        var analyticsCharts = _analyticsChartBuilder.Build(request.Date, items, categories);
+        var analyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
 
         return analyticsCharts;
     }
