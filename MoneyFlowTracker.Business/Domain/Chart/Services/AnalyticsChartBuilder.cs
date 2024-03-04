@@ -1,111 +1,22 @@
-﻿namespace MoneyFlowTracker.Business.Domain.Item.UseCases;
+namespace MoneyFlowTracker.Business.Domain.Chart.Services;
 
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using MoneyFlowTracker.Business.Domain.Category;
+using MoneyFlowTracker.Business.Domain.Item;
 using MoneyFlowTracker.Business.Util;
-using MoneyFlowTracker.Business.Util.Data;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-public class GetAnalyticsChartQueryRequest : IRequest<IEnumerable<IAnalyticsChart>>
+public class AnalyticsChartBuilder : IAnalyticsChartBuilder
 {
-    public DateOnly Date { get; set; }
-}
-
-public interface IAnalyticsPeriod
-{
-    int AmountCents { get; }
-    DateOnly StartDate { get; }
-    DateOnly EndDate { get; }
-}
-
-public class AnalyticsPeriod : IAnalyticsPeriod
-{
-    public int AmountCents { get; set; }
-    public DateOnly StartDate { get; set; }
-    public DateOnly EndDate { get; set; }
-
-    public static AnalyticsPeriod CreateWeek(int amountCents, int weekNumber, int year)
+    public IEnumerable<AnalyticsChart> Build(IEnumerable<ItemModel> items, IEnumerable<CategoryModel> categories, DateOnly date)
     {
-        var startDate = DateHelper.GetWeekDateOnly(year, weekNumber);
-
-        return new AnalyticsPeriod
-        {
-            AmountCents = amountCents,
-            StartDate = startDate,
-            EndDate = startDate.AddDays(6),
-        }; 
-    }
-    public static AnalyticsPeriod CreateMonth(int amountCents, int month, int year)
-    {
-        var startDate = new DateOnly(year, month, 1);
-
-        return new AnalyticsPeriod
-        {
-            AmountCents = amountCents,
-            StartDate = startDate,
-            EndDate = startDate.AddMonths(1).AddDays(-1),
-        };
-    }
-
-    public static AnalyticsPeriod Create(int amountCents, DateOnly startDate, DateOnly endDate)
-    {
-        return new AnalyticsPeriod
-        {
-            AmountCents = amountCents,
-            StartDate = startDate,
-            EndDate = endDate,
-        };
-    }
-}
-
-public interface IAnalyticsChart
-{
-    CategoryModel Category { get; }
-    IEnumerable<IAnalyticsPeriod> Weeks {  get; }
-    IEnumerable<IAnalyticsPeriod> Months { get; }
-    IEnumerable<IAnalyticsPeriod> Quarters { get; }
-}
-
-public class AnalyticsChart : IAnalyticsChart
-{
-    public required CategoryModel Category { get; set; }
-    public IEnumerable<IAnalyticsPeriod> Weeks { get; set; } = Enumerable.Empty<IAnalyticsPeriod>();
-    public IEnumerable<IAnalyticsPeriod> Months { get; set; } = Enumerable.Empty<IAnalyticsPeriod>();
-    public IEnumerable<IAnalyticsPeriod> Quarters { get; set; } = Enumerable.Empty<IAnalyticsPeriod>();
-}
-
-
-public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalyticsChartQueryRequest, IEnumerable<IAnalyticsChart>>
-{
-    private readonly IDataContext _dataContext;
-    public GetAnalyticsChartQueryRequestHandler(IDataContext dataContext)
-    {
-        _dataContext = dataContext;
-    }
-    public async Task<IEnumerable<IAnalyticsChart>> Handle(GetAnalyticsChartQueryRequest request, CancellationToken cancellationToken)
-    {
-        var items = await _dataContext.Items
-            .Include(i => i.Category)
-            .Where(item => item.CreatedDate.Year == request.Date.Year)
-            .ToListAsync()
-        ;
-
         var analyticsCharts = new List<AnalyticsChart>();
-        var categories = await _dataContext.Category.ToListAsync();
         var analyticsDaysByCategoryId = new Dictionary<Guid, List<AnalyticsPeriod>>();
-        
+
         foreach (var category in categories.Where(c => c.Id != Categories.Income && c.Id != Categories.Expenses))
         {
             var analyticsDays = new List<AnalyticsPeriod>();
             for (
-                var currentDay = new DateOnly(request.Date.Year, 1, 1);
-                currentDay < request.Date;
+                var currentDay = new DateOnly(date.Year, 1, 1);
+                currentDay < date;
                 currentDay = currentDay.AddDays(1)
             )
             {
@@ -123,8 +34,8 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
         {
             var analyticsDays = new List<AnalyticsPeriod>();
             for (
-                var currentDay = new DateOnly(request.Date.Year, 1, 1);
-                currentDay < request.Date;
+                var currentDay = new DateOnly(date.Year, 1, 1);
+                currentDay < date;
                 currentDay = currentDay.AddDays(1)
             )
             {
@@ -151,8 +62,8 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
             var analyticsQuarters = new List<AnalyticsPeriod>();
 
             for (
-                var currentWeekStartDate = new DateOnly(request.Date.Year, 1, 1);
-                currentWeekStartDate < request.Date;
+                var currentWeekStartDate = new DateOnly(date.Year, 1, 1);
+                currentWeekStartDate < date;
                 currentWeekStartDate = currentWeekStartDate.AddDays(7)
             )
             {
@@ -160,24 +71,24 @@ public class GetAnalyticsChartQueryRequestHandler : IRequestHandler<GetAnalytics
                 var totalByWeek = analyticsDaysByCategoryId[category.Id]
                     .Where(d => DateHelper.GetWeekOfYear(d.StartDate) == currentWeekNumber)
                     .Sum(d => d.AmountCents);
-                analyticsWeeks.Add(AnalyticsPeriod.CreateWeek(totalByWeek, currentWeekNumber, request.Date.Year));
+                analyticsWeeks.Add(AnalyticsPeriod.CreateWeek(totalByWeek, currentWeekNumber, date.Year));
             }
 
             for (
-                var currentMonthStartDate = new DateOnly(request.Date.Year, 1, 1);
-                currentMonthStartDate < request.Date;
+                var currentMonthStartDate = new DateOnly(date.Year, 1, 1);
+                currentMonthStartDate < date;
                 currentMonthStartDate = currentMonthStartDate.AddMonths(1)
             )
             {
                 var totalByMonth = analyticsDaysByCategoryId[category.Id]
                     .Where(d => d.StartDate.Month == currentMonthStartDate.Month)
                     .Sum(d => d.AmountCents);
-                analyticsMonths.Add(AnalyticsPeriod.CreateMonth(totalByMonth, currentMonthStartDate.Month, request.Date.Year));
+                analyticsMonths.Add(AnalyticsPeriod.CreateMonth(totalByMonth, currentMonthStartDate.Month, date.Year));
             }
 
             for (
-                var currentQuarterStartDate = new DateOnly(request.Date.Year, 1, 1);
-                currentQuarterStartDate < request.Date;
+                var currentQuarterStartDate = new DateOnly(date.Year, 1, 1);
+                currentQuarterStartDate < date;
                 currentQuarterStartDate = currentQuarterStartDate.AddMonths(3)
             )
             {
