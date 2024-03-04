@@ -70,7 +70,16 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
         ;
         var netItems = await _dataContext.NetItems
             .Include(i => i.Category)
-            .Where(item => item.CreatedDate.Year == date.Year && netItemCategoryIds.Contains(item.CategoryId))
+            .Where(item =>
+                item.CreatedDate.Year == date.Year &&
+                (
+                    netItemCategoryIds.Contains(item.Category.Id) ||
+                    (
+                        item.Category.ParentCategoryId != null &&
+                        netItemCategoryIds.Contains(item.Category.ParentCategoryId.Value)
+                    )
+                )
+            )
             .ToListAsync(cancellationToken: cancellationToken)
         ;
         var allItems = grossItems
