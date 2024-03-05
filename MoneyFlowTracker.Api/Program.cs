@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MoneyFlowTracker.Api.Domain.Balance;
 using MoneyFlowTracker.Api.Domain.Category;
 using MoneyFlowTracker.Api.Domain.Item;
 using MoneyFlowTracker.Api.Domain.NetItem;
@@ -60,6 +61,10 @@ app.MapPost("/api/items/", UpsertItemQueryApi.Handler);
 app.MapGet("/api/items/net/{date}", GetNetItemsByDateQueryApi.Handler);
 app.MapGet("/api/items/net/{id:Guid}", GetNetItemQueryApi.Handler);
 app.MapPost("/api/items/net/", UpsertNetItemQueryApi.Handler);
+
+// Balance
+app.MapGet("/api/balance/", GetCurrentBalanceQueryApi.Handler);
+app.MapPost("/api/balance/", AddBalanceCommandApi.Handler);
 
 // Category
 app.MapGet("/api/categories", GetAllCategoriesQueryApi.Handler);

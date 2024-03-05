@@ -1,6 +1,7 @@
 ﻿namespace MoneyFlowTracker.Infrastructure.Data;
 
 using Microsoft.EntityFrameworkCore;
+using MoneyFlowTracker.Business.Domain.Balance;
 using MoneyFlowTracker.Business.Domain.Category;
 using MoneyFlowTracker.Business.Domain.Item;
 using MoneyFlowTracker.Business.Domain.NetItem;
@@ -8,14 +9,12 @@ using MoneyFlowTracker.Business.Util.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class MoneyFlowTrackerDbContext : DbContext, IDataContext
-{
-    public MoneyFlowTrackerDbContext(DbContextOptions<MoneyFlowTrackerDbContext> options) : base(options)
-    {
-    }
 
+public class MoneyFlowTrackerDbContext(DbContextOptions<MoneyFlowTrackerDbContext> options) : DbContext(options), IDataContext
+{
     public DbSet<ItemModel> Items { get; set; }
     public DbSet<NetItemModel> NetItems { get; set; }
+    public DbSet<BalanceModel> Balances { get; set; }
     public DbSet<CategoryModel> Category { get; set; }
 
     async Task IDataContext.SaveChanges(CancellationToken cancellationToken)
@@ -67,6 +66,13 @@ public class MoneyFlowTrackerDbContext : DbContext, IDataContext
             .IsRequired(false)
         ;
         // </- CategoryModel -->
+
+        // <-- Balances -->
+        var balanceBuilder = modelBuilder.Entity<BalanceModel>().ToTable("Balances");
+
+        // Key
+        balanceBuilder.HasKey(i => i.Id);
+        // </- Balances -->
     }
 
 }
