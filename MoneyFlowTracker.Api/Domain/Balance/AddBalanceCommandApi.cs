@@ -17,7 +17,7 @@ public static class AddBalanceCommandApi
     {
         var newBalanceId = Guid.NewGuid();
 
-        await mediator.Send(new AddBalanceCommandRequest
+        await mediator.Send(new UpsertBalanceCommandRequest
         {
             Id = newBalanceId,
             AmountCents = request.AmountCents,

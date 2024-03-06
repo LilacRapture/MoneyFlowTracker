@@ -18,7 +18,7 @@ public class GetCurrentBalanceQueryRequestHandler(IDataContext dataContext) : IR
     public async Task<BalanceModel?> Handle(GetCurrentBalanceQueryRequest request, CancellationToken cancellationToken)
     {
         return await _dataContext.Balances
-            .OrderBy(b => b.CreatedDate)
+            .OrderByDescending(b => b.CreatedDate)
             .FirstOrDefaultAsync(cancellationToken: cancellationToken)
         ;
     }
