@@ -9,11 +9,11 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
     public IEnumerable<AnalyticsChart> Build(IEnumerable<ItemModel> items, IEnumerable<CategoryModel> categories, DateOnly date)
     {
         var analyticsCharts = new List<AnalyticsChart>();
-        var analyticsDaysByCategoryId = new Dictionary<Guid, List<AnalyticsPeriod>>();
+        var analyticsDaysByCategoryId = new Dictionary<Guid, List<AnalyticsChartPoint>>();
 
         foreach (var category in categories.Where(c => c.Id != Categories.Income && c.Id != Categories.Expenses))
         {
-            var analyticsDays = new List<AnalyticsPeriod>();
+            var analyticsDays = new List<AnalyticsChartPoint>();
             for (
                 var currentDay = new DateOnly(date.Year, 1, 1);
                 currentDay < date;
@@ -24,7 +24,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
                     .Where(i => i.CreatedDate == currentDay)
                     .Where(i => i.Category.Id == category.Id || i.Category.ParentCategoryId == category.Id)
                     .Sum(i => i.AmountCents);
-                analyticsDays.Add(AnalyticsPeriod.Create(totalByDay, currentDay, currentDay));
+                analyticsDays.Add(AnalyticsChartPoint.Create(totalByDay, currentDay, currentDay));
             }
 
             analyticsDaysByCategoryId.Add(category.Id, analyticsDays);
@@ -32,7 +32,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
 
         foreach (var category in categories.Where(c => c.Id == Categories.Income || c.Id == Categories.Expenses))
         {
-            var analyticsDays = new List<AnalyticsPeriod>();
+            var analyticsDays = new List<AnalyticsChartPoint>();
             for (
                 var currentDay = new DateOnly(date.Year, 1, 1);
                 currentDay < date;
@@ -49,7 +49,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
                         .Where(p => p.StartDate == currentDay)
                         .Sum(p => p.AmountCents)
                     );
-                analyticsDays.Add(AnalyticsPeriod.Create(categoryTotalByDay + subcategoryTotalByDay, currentDay, currentDay));
+                analyticsDays.Add(AnalyticsChartPoint.Create(categoryTotalByDay + subcategoryTotalByDay, currentDay, currentDay));
             }
 
             analyticsDaysByCategoryId.Add(category.Id, analyticsDays);
@@ -57,9 +57,9 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
 
         foreach (var category in categories)
         {
-            var analyticsWeeks = new List<AnalyticsPeriod>();
-            var analyticsMonths = new List<AnalyticsPeriod>();
-            var analyticsQuarters = new List<AnalyticsPeriod>();
+            var analyticsWeeks = new List<AnalyticsChartPoint>();
+            var analyticsMonths = new List<AnalyticsChartPoint>();
+            var analyticsQuarters = new List<AnalyticsChartPoint>();
 
             for (
                 var currentWeekStartDate = new DateOnly(date.Year, 1, 1);
@@ -71,7 +71,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
                 var totalByWeek = analyticsDaysByCategoryId[category.Id]
                     .Where(d => DateHelper.GetWeekOfYear(d.StartDate) == currentWeekNumber)
                     .Sum(d => d.AmountCents);
-                analyticsWeeks.Add(AnalyticsPeriod.CreateWeek(totalByWeek, currentWeekNumber, date.Year));
+                analyticsWeeks.Add(AnalyticsChartPoint.CreateWeek(totalByWeek, currentWeekNumber, date.Year));
             }
 
             for (
@@ -83,7 +83,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
                 var totalByMonth = analyticsDaysByCategoryId[category.Id]
                     .Where(d => d.StartDate.Month == currentMonthStartDate.Month)
                     .Sum(d => d.AmountCents);
-                analyticsMonths.Add(AnalyticsPeriod.CreateMonth(totalByMonth, currentMonthStartDate.Month, date.Year));
+                analyticsMonths.Add(AnalyticsChartPoint.CreateMonth(totalByMonth, currentMonthStartDate.Month, date.Year));
             }
 
             for (
@@ -96,7 +96,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
                 var totalByQuarter = analyticsDaysByCategoryId[category.Id]
                     .Where(d => d.StartDate.Month >= currentQuarterStartDate.Month && d.StartDate.Month <= currentQuarterEndDate.Month)
                     .Sum(d => d.AmountCents);
-                analyticsQuarters.Add(AnalyticsPeriod.Create(totalByQuarter, currentQuarterStartDate, currentQuarterEndDate));
+                analyticsQuarters.Add(AnalyticsChartPoint.Create(totalByQuarter, currentQuarterStartDate, currentQuarterEndDate));
             }
 
             var analyticsChart = new AnalyticsChart

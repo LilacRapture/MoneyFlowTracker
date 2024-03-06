@@ -1,7 +1,7 @@
 namespace MoneyFlowTracker.Business.Domain.Chart;
 
 
-public interface IAnalyticsPeriod
+public interface IAnalyticsChartPoint
 {
     int AmountCents { get; }
     DateOnly StartDate { get; }

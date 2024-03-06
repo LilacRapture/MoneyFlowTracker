@@ -11,11 +11,11 @@ public class GetAnalyticsChartQueryApi
     {
         var dateNow = DateOnly.FromDateTime(DateTime.Now);
 
-        var analyticsCharts = await mediator.Send(new GetAnalyticsChartQueryRequest
+        var analyticsRows = await mediator.Send(new GetAnalyticsChartQueryRequest
         {
             Date = dateNow,
         });
-        if (analyticsCharts == null)
+        if (analyticsRows == null)
         {
             return TypedResults.NotFound();
         }
@@ -24,12 +24,12 @@ public class GetAnalyticsChartQueryApi
         {
             Date = dateNow,
         });
-        if (analyticsCharts == null)
+        if (analyticsRows == null)
         {
             return TypedResults.NotFound();
         }
 
-        var allAnalyticsCharts = analyticsCharts.Concat(customAnalyticsCharts);
+        var allAnalyticsCharts = analyticsRows.Concat(customAnalyticsCharts);
         return TypedResults.Ok(allAnalyticsCharts);
     }
 }

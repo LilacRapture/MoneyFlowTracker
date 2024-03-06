@@ -11,9 +11,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static NetItem.NetItemExtensions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
-public class GetAnalyticsChartCustomQueryRequest : IRequest<IEnumerable<IAnalyticsChart>>
+public class GetAnalyticsChartCustomQueryRequest : IRequest<IEnumerable<IAnalyticsRow>>
 {
     public DateOnly Date { get; set; }
 }
@@ -22,14 +23,23 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
     IDataContext dataContext,
     IAnalyticsChartBuilder analyticsChartBuilder
 )
-  : IRequestHandler<GetAnalyticsChartCustomQueryRequest, IEnumerable<IAnalyticsChart>>
+  : IRequestHandler<GetAnalyticsChartCustomQueryRequest, IEnumerable<IAnalyticsRow>>
 {
     private readonly IDataContext _dataContext = dataContext;
     private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
 
-    public async Task<IEnumerable<IAnalyticsChart>> Handle(GetAnalyticsChartCustomQueryRequest request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<IAnalyticsRow>> Handle(GetAnalyticsChartCustomQueryRequest request, CancellationToken cancellationToken)
     {
-        return await BuildCustomIncomeCharts(request.Date, cancellationToken);
+        var customanalyticsCharts = await BuildCustomIncomeCharts(request.Date, cancellationToken);
+        var analyticsRows = customanalyticsCharts.Select(c => new AnalyticsRow
+        {
+            Category = c.Category,
+            Weekly = MapChartPointsToAnalyticsPeriod(c.Weeks),
+            Monthly = MapChartPointsToAnalyticsPeriod(c.Months),
+            Quarterly = MapChartPointsToAnalyticsPeriod(c.Quarters),
+        });
+
+        return analyticsRows;
     }
 
     private async Task<IEnumerable<IAnalyticsChart>> BuildCustomIncomeCharts(DateOnly date, CancellationToken cancellationToken)
@@ -92,6 +102,24 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
 
 
         return _analyticsChartBuilder.Build(allItems, customNamedCategories, date);
+    }
+    private static AnalyticsPeriod MapChartPointsToAnalyticsPeriod(IEnumerable<IAnalyticsChartPoint> analyticsChartPoints)
+    {
+        var sortedAmountCents = analyticsChartPoints.OrderByDescending(p => p.StartDate).Select(p => p.AmountCents);
+        var lastAmountCents = sortedAmountCents.FirstOrDefault();
+        var previousLastAmountCents = sortedAmountCents.ElementAtOrDefault(1);
+        var changePercent = 0;
+        if (lastAmountCents != 0)
+        {
+            changePercent = (previousLastAmountCents - lastAmountCents) / lastAmountCents * 100;
+        }
+
+        return new AnalyticsPeriod
+        {
+            ChartPoints = analyticsChartPoints,
+            AmountCents = lastAmountCents,
+            ChangePercent = changePercent,
+        };
     }
 
 

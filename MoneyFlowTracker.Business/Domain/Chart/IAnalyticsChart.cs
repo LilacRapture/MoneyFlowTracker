@@ -6,7 +6,7 @@ using MoneyFlowTracker.Business.Domain.Category;
 public interface IAnalyticsChart
 {
     CategoryModel Category { get; }
-    IEnumerable<IAnalyticsPeriod> Weeks {  get; }
-    IEnumerable<IAnalyticsPeriod> Months { get; }
-    IEnumerable<IAnalyticsPeriod> Quarters { get; }
+    IEnumerable<IAnalyticsChartPoint> Weeks {  get; }
+    IEnumerable<IAnalyticsChartPoint> Months { get; }
+    IEnumerable<IAnalyticsChartPoint> Quarters { get; }
 }
