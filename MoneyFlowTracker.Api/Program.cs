@@ -31,6 +31,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
 // Custom Services
 builder.Services.AddTransient<IDataContext, MoneyFlowTrackerDbContext>();
 builder.Services.AddTransient<IAnalyticsChartBuilder, AnalyticsChartBuilder>();
+builder.Services.AddTransient<ICustomIncomeService, CustomIncomeService>();
 builder.Services.AddTransient<IAnalyticsRowBuilder, AnalyticsRowBuilder>();
 
 builder.Services.AddCors(options =>

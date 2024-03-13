@@ -19,17 +19,6 @@ public class GetAnalyticsChartQueryApi
         {
             return TypedResults.NotFound();
         }
-
-        var customAnalyticsCharts = await mediator.Send(new GetAnalyticsChartCustomQueryRequest
-        {
-            Date = dateNow,
-        });
-        if (analyticsRows == null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        var allAnalyticsCharts = analyticsRows.Concat(customAnalyticsCharts);
-        return TypedResults.Ok(allAnalyticsCharts);
+        return TypedResults.Ok(analyticsRows);
     }
 }

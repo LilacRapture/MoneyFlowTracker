@@ -1,43 +1,25 @@
-﻿namespace MoneyFlowTracker.Business.Domain.Chart.UseCases;
+﻿namespace MoneyFlowTracker.Business.Domain.Chart.Services;
 
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MoneyFlowTracker.Business.Domain.Category;
-using MoneyFlowTracker.Business.Domain.Chart.Services;
 using MoneyFlowTracker.Business.Domain.Item;
 using MoneyFlowTracker.Business.Util.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using static NetItem.NetItemExtensions;
 
-public class GetAnalyticsChartCustomQueryRequest : IRequest<IEnumerable<IAnalyticsRow>>
-{
-    public DateOnly Date { get; set; }
-}
-
-public class GetAnalyticsChartCustomQueryRequestHandler(
+public class CustomIncomeService(
     IDataContext dataContext,
-    IAnalyticsChartBuilder analyticsChartBuilder,
-    IAnalyticsRowBuilder analyticsRowBuilder
-)
-  : IRequestHandler<GetAnalyticsChartCustomQueryRequest, IEnumerable<IAnalyticsRow>>
+    IAnalyticsChartBuilder analyticsChartBuilder
+) 
+    : ICustomIncomeService
 {
     private readonly IDataContext _dataContext = dataContext;
     private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
-    private readonly IAnalyticsRowBuilder _analyticsRowBuilder = analyticsRowBuilder;
-
-    public async Task<IEnumerable<IAnalyticsRow>> Handle(GetAnalyticsChartCustomQueryRequest request, CancellationToken cancellationToken)
+    public IEnumerable<IAnalyticsChart> CreateCustomIncomeCharts(DateOnly date)
     {
-        var customAnalyticsCharts = await BuildCustomIncomeCharts(request.Date, cancellationToken);
-        var analyticsRows = _analyticsRowBuilder.Build(customAnalyticsCharts);
 
-        return analyticsRows;
-    }
-
-    private async Task<IEnumerable<IAnalyticsChart>> BuildCustomIncomeCharts(DateOnly date, CancellationToken cancellationToken)
-    {
         // Prepare Category Ids
         var grossItemCategoryIds = new Guid[]
         {
@@ -53,9 +35,9 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
 
         // Prepare Categories
         var allCategoryIds = grossItemCategoryIds.Concat(netItemCategoryIds);
-        var categories = await _dataContext.Category
+        var categories = _dataContext.Category
             .Where(c => allCategoryIds.Contains(c.Id))
-            .ToListAsync(cancellationToken: cancellationToken)
+            .ToList()
         ;
         var customNamedCategories = categories.Select(c => new CategoryModel
         {
@@ -67,12 +49,12 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
 
 
         // Prepare Items
-        var grossItems = await _dataContext.Items
+        var grossItems = _dataContext.Items
             .Include(i => i.Category)
             .Where(item => item.CreatedDate.Year == date.Year && grossItemCategoryIds.Contains(item.CategoryId))
-            .ToListAsync(cancellationToken: cancellationToken)
+            .ToList()
         ;
-        var netItems = await _dataContext.NetItems
+        var netItems = _dataContext.NetItems
             .Include(i => i.Category)
             .Where(item =>
                 item.CreatedDate.Year == date.Year &&
@@ -81,10 +63,10 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
                     (
                         item.Category.ParentCategoryId != null &&
                         netItemCategoryIds.Contains(item.Category.ParentCategoryId.Value)
-                    )
-                )
             )
-            .ToListAsync(cancellationToken: cancellationToken)
+            )
+            )
+            .ToList()
         ;
         var allItems = grossItems
             .Concat(netItems.Select(AsItemModel))
@@ -137,6 +119,3 @@ public class GetAnalyticsChartCustomQueryRequestHandler(
         }
     ;
 }
-
-
-

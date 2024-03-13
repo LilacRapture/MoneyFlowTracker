@@ -17,12 +17,14 @@ public class GetAnalyticsChartQueryRequest : IRequest<IEnumerable<IAnalyticsRow>
 public class GetAnalyticsChartQueryRequestHandler(
     IDataContext dataContext,
     IAnalyticsChartBuilder analyticsChartBuilder,
+    ICustomIncomeService customIncomeService,
     IAnalyticsRowBuilder analyticsRowBuilder
 )
   : IRequestHandler<GetAnalyticsChartQueryRequest, IEnumerable<IAnalyticsRow>>
 {
     private readonly IDataContext _dataContext = dataContext;
     private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
+    private readonly ICustomIncomeService _customIncomeService = customIncomeService;
     private readonly IAnalyticsRowBuilder _analyticsRowBuilder = analyticsRowBuilder;
 
     public async Task<IEnumerable<IAnalyticsRow>> Handle(GetAnalyticsChartQueryRequest request, CancellationToken cancellationToken)
@@ -35,7 +37,9 @@ public class GetAnalyticsChartQueryRequestHandler(
 
         var categories = await _dataContext.Category.ToListAsync(cancellationToken: cancellationToken);
         var analyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
-        var analyticsRows = _analyticsRowBuilder.Build(analyticsCharts);
+        var customIncomeCharts = _customIncomeService.CreateCustomIncomeCharts(request.Date);
+        var allAnalyticsCharts = analyticsCharts.Concat(customIncomeCharts);
+        var analyticsRows = _analyticsRowBuilder.Build(allAnalyticsCharts);
 
         return analyticsRows;
     }
