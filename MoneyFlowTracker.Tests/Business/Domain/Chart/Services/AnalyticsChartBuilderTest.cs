@@ -398,7 +398,6 @@ public class AnalyticsChartBuilderTest
         var expectedAnalyticsCharts = new List<AnalyticsChart> { expectedAnalyticsChart1, expectedAnalyticsChart2, expectedAnalyticsChart3 };
 
         var actualAnalyticsCharts = new AnalyticsChartBuilder().Build(itemList, categoryList, new DateOnly(2024, 2, 15));
-        //CollectionAssert.AreEqual(expectedAnalyticsCharts, actualAnalyticsCharts);
         actualAnalyticsCharts.Should().BeEquivalentTo(expectedAnalyticsCharts, options => options.ComparingByMembers<AnalyticsChart>());
     }
 }
