@@ -1,4 +1,4 @@
-namespace MoneyFlowTracker.Tests;
+namespace MoneyFlowTracker.Business.Tests;
 
 public class Tests
 {

@@ -16,12 +16,14 @@ public class GetAnalyticsChartQueryRequest : IRequest<IEnumerable<IAnalyticsRow>
 
 public class GetAnalyticsChartQueryRequestHandler(
     IDataContext dataContext,
-    IAnalyticsChartBuilder analyticsChartBuilder
+    IAnalyticsChartBuilder analyticsChartBuilder,
+    IAnalyticsRowBuilder analyticsRowBuilder
 )
   : IRequestHandler<GetAnalyticsChartQueryRequest, IEnumerable<IAnalyticsRow>>
 {
     private readonly IDataContext _dataContext = dataContext;
     private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
+    private readonly IAnalyticsRowBuilder _analyticsRowBuilder = analyticsRowBuilder;
 
     public async Task<IEnumerable<IAnalyticsRow>> Handle(GetAnalyticsChartQueryRequest request, CancellationToken cancellationToken)
     {
@@ -33,33 +35,8 @@ public class GetAnalyticsChartQueryRequestHandler(
 
         var categories = await _dataContext.Category.ToListAsync(cancellationToken: cancellationToken);
         var analyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
-
-        var analyticsRows = analyticsCharts.Select(c => new AnalyticsRow
-        {
-            Category = c.Category,
-            Weekly = MapChartPointsToAnalyticsPeriod(c.Weeks),
-            Monthly = MapChartPointsToAnalyticsPeriod(c.Months),
-            Quarterly = MapChartPointsToAnalyticsPeriod(c.Quarters),
-        });
+        var analyticsRows = _analyticsRowBuilder.Build(analyticsCharts);
 
         return analyticsRows;
-    }
-    private static AnalyticsPeriod MapChartPointsToAnalyticsPeriod(IEnumerable<IAnalyticsChartPoint> analyticsChartPoints)
-    {
-        var sortedAmountCents = analyticsChartPoints.OrderByDescending(p => p.StartDate).Select(p => p.AmountCents);
-        var lastAmountCents = sortedAmountCents.FirstOrDefault();
-        var previousLastAmountCents = sortedAmountCents.ElementAtOrDefault(1);
-        var changePercent = 0;
-        if (lastAmountCents != 0)
-        {
-            changePercent = (previousLastAmountCents - lastAmountCents) / lastAmountCents * 100;
-        }
-
-        return new AnalyticsPeriod
-        {
-            ChartPoints = analyticsChartPoints,
-            AmountCents = lastAmountCents,
-            ChangePercent = changePercent,
-        };
     }
 }

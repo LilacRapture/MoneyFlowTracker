@@ -6,7 +6,7 @@ using MoneyFlowTracker.Business.Util;
 
 public class AnalyticsChartBuilder : IAnalyticsChartBuilder
 {
-    public IEnumerable<AnalyticsChart> Build(IEnumerable<ItemModel> items, IEnumerable<CategoryModel> categories, DateOnly date)
+    public IEnumerable<IAnalyticsChart> Build(IEnumerable<ItemModel> items, IEnumerable<CategoryModel> categories, DateOnly date)
     {
         var analyticsCharts = new List<AnalyticsChart>();
         var analyticsDaysByCategoryId = new Dictionary<Guid, List<AnalyticsChartPoint>>();
