@@ -9,11 +9,11 @@ using System.Collections.Generic;
 using System.Linq;
 using static NetItem.NetItemExtensions;
 
-public class CustomIncomeService(
+public class CustomRevenueService(
     IDataContext dataContext,
     IAnalyticsChartBuilder analyticsChartBuilder
 ) 
-    : ICustomIncomeService
+    : ICustomRevenueService
 {
     private readonly IDataContext _dataContext = dataContext;
     private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
@@ -23,7 +23,7 @@ public class CustomIncomeService(
         // Prepare Category Ids
         var grossItemCategoryIds = new Guid[]
         {
-            Categories.Income,
+            Categories.Revenue,
             Categories.Cash,
         };
         var netItemCategoryIds = new Guid[]
@@ -80,11 +80,10 @@ public class CustomIncomeService(
         return _analyticsChartBuilder.Build(allItems, customNamedCategories, date);
     }
 
-    private const string CustomIncomeIdString = "b1488d86-353a-4e89-a890-de1ecb6ba9bb";
     private static Guid BuildCustomCategoryId(Guid categoryId) =>
         categoryId.ToString() switch
         {
-            Categories.IncomeString => Guid.Parse(CustomIncomeIdString),
+            Categories.RevenueString => Categories.CustomRevenue,
             Categories.CashString => Guid.Parse("8bbce42f-f440-4784-8fe1-3c70da523a4e"),
             Categories.TerminalString => Guid.Parse("a7748246-cd7d-4dcb-b217-5a5c100cf0a9"),
             Categories.DeliveryString => Guid.Parse("e56f662d-696b-47ca-952e-fa2b9271584d"),
@@ -93,13 +92,13 @@ public class CustomIncomeService(
     ;
 
     private static Guid? BuildCustomCategoryParentId(Guid? categoryId) =>
-        categoryId == null ? null : Guid.Parse(CustomIncomeIdString)
+        categoryId == null ? null : Categories.CustomRevenue
     ;
 
     private static string BuildCustomCategoryName(string categoryId) =>
         categoryId switch
         {
-            Categories.IncomeString => "Чистый Приход",
+            Categories.RevenueString => "Чистый Приход",
             Categories.CashString => "Грязный Нал",
             Categories.TerminalString => "Чистый Терминал",
             Categories.DeliveryString => "Чистая Доставка",

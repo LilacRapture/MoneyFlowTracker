@@ -2,6 +2,7 @@
 
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MoneyFlowTracker.Business.Domain.Category;
 using MoneyFlowTracker.Business.Domain.Chart.Services;
 using MoneyFlowTracker.Business.Util.Data;
 using System;
@@ -17,14 +18,14 @@ public class GetAnalyticsChartQueryRequest : IRequest<IEnumerable<IAnalyticsRow>
 public class GetAnalyticsChartQueryRequestHandler(
     IDataContext dataContext,
     IAnalyticsChartBuilder analyticsChartBuilder,
-    ICustomIncomeService customIncomeService,
+    ICustomRevenueService customIncomeService,
     IAnalyticsRowBuilder analyticsRowBuilder
 )
   : IRequestHandler<GetAnalyticsChartQueryRequest, IEnumerable<IAnalyticsRow>>
 {
     private readonly IDataContext _dataContext = dataContext;
     private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
-    private readonly ICustomIncomeService _customIncomeService = customIncomeService;
+    private readonly ICustomRevenueService _customIncomeService = customIncomeService;
     private readonly IAnalyticsRowBuilder _analyticsRowBuilder = analyticsRowBuilder;
 
     public async Task<IEnumerable<IAnalyticsRow>> Handle(GetAnalyticsChartQueryRequest request, CancellationToken cancellationToken)
@@ -37,10 +38,52 @@ public class GetAnalyticsChartQueryRequestHandler(
 
         var categories = await _dataContext.Category.ToListAsync(cancellationToken: cancellationToken);
         var analyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
-        var customIncomeCharts = _customIncomeService.CreateCustomIncomeCharts(request.Date);
-        var allAnalyticsCharts = analyticsCharts.Concat(customIncomeCharts);
+        var customRevenueCharts = _customIncomeService.CreateCustomIncomeCharts(request.Date);
+        var incomeChart = CreateIncomeChart(
+            customRevenueCharts.Single(c => c.Category.Id == Categories.CustomRevenue), 
+            analyticsCharts.Single(c => c.Category.Id == Categories.Expenses)
+        );
+
+        var allAnalyticsCharts = analyticsCharts
+            .Concat(customRevenueCharts)
+            .Concat([incomeChart]);
         var analyticsRows = _analyticsRowBuilder.Build(allAnalyticsCharts);
 
         return analyticsRows;
+    }
+
+    private static IAnalyticsChart CreateIncomeChart(IAnalyticsChart revenue, IAnalyticsChart expense)
+    {
+        var incomeWeeks = revenue.Weeks.Zip(expense.Weeks, (rp, ep) => new AnalyticsChartPoint
+        {
+            AmountCents = rp.AmountCents - ep.AmountCents,
+            StartDate = rp.StartDate,
+            EndDate = rp.EndDate,
+        });
+        var incomeMonths = revenue.Months.Zip(expense.Months, (rp, ep) => new AnalyticsChartPoint
+        {
+            AmountCents = rp.AmountCents - ep.AmountCents,
+            StartDate = rp.StartDate,
+            EndDate = rp.EndDate,
+        });
+        var incomeQuarters = revenue.Quarters.Zip(expense.Quarters, (rp, ep) => new AnalyticsChartPoint
+        {
+            AmountCents = rp.AmountCents - ep.AmountCents,
+            StartDate = rp.StartDate,
+            EndDate = rp.EndDate,
+        });
+
+        return new AnalyticsChart
+        {
+            Category = new CategoryModel
+            {
+                Id = Categories.Income,
+                Name = "Прибыль",
+                IsIncome = true,
+            },
+            Weeks = incomeWeeks,
+            Months = incomeMonths,
+            Quarters = incomeQuarters,
+        };
     }
 }

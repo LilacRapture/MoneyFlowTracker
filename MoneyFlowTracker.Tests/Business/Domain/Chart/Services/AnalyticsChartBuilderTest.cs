@@ -20,7 +20,7 @@ public class AnalyticsChartBuilderTest
     {
         var category1 = new CategoryModel
         {
-            Id = Categories.Income,
+            Id = Categories.Revenue,
             Name = "Category 1",
             ParentCategoryId = null,
         };
@@ -362,7 +362,7 @@ public class AnalyticsChartBuilderTest
         {
             Category = new CategoryModel 
             {
-                Id = Categories.Income,
+                Id = Categories.Revenue,
                 Name = "Category 1",
                 ParentCategoryId = null,
             },
@@ -376,7 +376,7 @@ public class AnalyticsChartBuilderTest
             {
                 Id = Guid.Parse("ef340c0e-d636-40a9-97a0-7ef901ca1633"),
                 Name = "Category 2",
-                ParentCategoryId = Categories.Income,
+                ParentCategoryId = Categories.Revenue,
             },
             Weeks = expectedAnalyticsWeeks2,
             Months = expectedAnalyticsMonths2,

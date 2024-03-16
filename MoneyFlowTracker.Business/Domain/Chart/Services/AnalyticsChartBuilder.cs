@@ -11,7 +11,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
         var analyticsCharts = new List<AnalyticsChart>();
         var analyticsDaysByCategoryId = new Dictionary<Guid, List<AnalyticsChartPoint>>();
 
-        foreach (var category in categories.Where(c => c.Id != Categories.Income && c.Id != Categories.Expenses))
+        foreach (var category in categories.Where(c => c.Id != Categories.Revenue && c.Id != Categories.Expenses))
         {
             var analyticsDays = new List<AnalyticsChartPoint>();
             for (
@@ -30,7 +30,7 @@ public class AnalyticsChartBuilder : IAnalyticsChartBuilder
             analyticsDaysByCategoryId.Add(category.Id, analyticsDays);
         }
 
-        foreach (var category in categories.Where(c => c.Id == Categories.Income || c.Id == Categories.Expenses))
+        foreach (var category in categories.Where(c => c.Id == Categories.Revenue || c.Id == Categories.Expenses))
         {
             var analyticsDays = new List<AnalyticsChartPoint>();
             for (

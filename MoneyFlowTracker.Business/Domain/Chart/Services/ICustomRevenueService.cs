@@ -1,7 +1,7 @@
 ﻿
 namespace MoneyFlowTracker.Business.Domain.Chart.Services;
 
-public interface ICustomIncomeService
+public interface ICustomRevenueService
 {
     IEnumerable<IAnalyticsChart> CreateCustomIncomeCharts(DateOnly date);
 }
