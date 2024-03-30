@@ -37,14 +37,14 @@ public class GetAnalyticsChartQueryRequestHandler(
         ;
 
         var categories = await _dataContext.Category.ToListAsync(cancellationToken: cancellationToken);
-        var analyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
+        var grossAnalyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
         var customRevenueCharts = _customIncomeService.CreateCustomIncomeCharts(request.Date);
         var incomeChart = CreateIncomeChart(
             customRevenueCharts.Single(c => c.Category.Id == Categories.CustomRevenue), 
-            analyticsCharts.Single(c => c.Category.Id == Categories.Expenses)
+            grossAnalyticsCharts.Single(c => c.Category.Id == Categories.Expenses)
         );
 
-        var allAnalyticsCharts = analyticsCharts
+        var allAnalyticsCharts = grossAnalyticsCharts
             .Concat(customRevenueCharts)
             .Concat([incomeChart]);
         var analyticsRows = _analyticsRowBuilder.Build(allAnalyticsCharts);
