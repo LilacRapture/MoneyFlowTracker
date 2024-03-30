@@ -52,7 +52,10 @@ public class CustomRevenueService(
                 item.CreatedDate.Year == date.Year &&
                 (
                     netItemCategoryIds.Contains(item.Category.Id) ||
-                    netItemCategoryIds.Contains(item.Category.ParentCategoryId.GetValueOrDefault(Guid.Empty))
+                    (
+                        item.Category.ParentCategoryId != null &&
+                        netItemCategoryIds.Contains(item.Category.ParentCategoryId.Value)
+                    )
                 )
             )
             .ToListAsync()
