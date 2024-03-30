@@ -38,7 +38,7 @@ public class GetAnalyticsChartQueryRequestHandler(
 
         var categories = await _dataContext.Category.ToListAsync(cancellationToken: cancellationToken);
         var grossAnalyticsCharts = _analyticsChartBuilder.Build(items, categories, request.Date);
-        var customRevenueCharts = _customIncomeService.CreateCustomIncomeCharts(request.Date);
+        var customRevenueCharts = await _customIncomeService.CreateCustomRevenueCharts(request.Date);
         var incomeChart = CreateIncomeChart(
             customRevenueCharts.Single(c => c.Category.Id == Categories.CustomRevenue), 
             grossAnalyticsCharts.Single(c => c.Category.Id == Categories.Expenses)

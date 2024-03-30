@@ -9,13 +9,14 @@ using System.Collections.Generic;
 using System.Linq;
 using static NetItem.NetItemExtensions;
 
+
 public class CustomRevenueService(
     IDataContext dataContext,
     IAnalyticsChartBuilder analyticsChartBuilder
 ) 
     : ICustomRevenueService
 {
-    public async Task<IEnumerable<IAnalyticsChart>> CreateCustomIncomeCharts(DateOnly date)
+    public async Task<IEnumerable<IAnalyticsChart>> CreateCustomRevenueCharts(DateOnly date)
     {
         // Prepare Category Ids
         var grossItemCategoryIds = new Guid[]
