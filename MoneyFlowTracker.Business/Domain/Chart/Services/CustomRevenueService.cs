@@ -15,11 +15,8 @@ public class CustomRevenueService(
 ) 
     : ICustomRevenueService
 {
-    private readonly IDataContext _dataContext = dataContext;
-    private readonly IAnalyticsChartBuilder _analyticsChartBuilder = analyticsChartBuilder;
-    public IEnumerable<IAnalyticsChart> CreateCustomIncomeCharts(DateOnly date)
+    public async Task<IEnumerable<IAnalyticsChart>> CreateCustomIncomeCharts(DateOnly date)
     {
-
         // Prepare Category Ids
         var grossItemCategoryIds = new Guid[]
         {
@@ -35,38 +32,29 @@ public class CustomRevenueService(
 
         // Prepare Categories
         var allCategoryIds = grossItemCategoryIds.Concat(netItemCategoryIds);
-        var categories = _dataContext.Category
+        var categories = await dataContext.Category
             .Where(c => allCategoryIds.Contains(c.Id))
-            .ToList()
+            .ToListAsync()
         ;
-        var customNamedCategories = categories.Select(c => new CategoryModel
-        {
-            Id = BuildCustomCategoryId(c.Id),
-            Name = BuildCustomCategoryName(c.Id.ToString()),
-            IsIncome = c.IsIncome,
-            ParentCategoryId = BuildCustomCategoryParentId(c.ParentCategoryId),
-        });
+        var customNamedCategories = categories.Select(MapCategoryToCustomCategory);
 
 
         // Prepare Items
-        var grossItems = _dataContext.Items
+        var grossItems = await dataContext.Items
             .Include(i => i.Category)
             .Where(item => item.CreatedDate.Year == date.Year && grossItemCategoryIds.Contains(item.CategoryId))
-            .ToList()
+            .ToListAsync()
         ;
-        var netItems = _dataContext.NetItems
+        var netItems = await dataContext.NetItems
             .Include(i => i.Category)
             .Where(item =>
                 item.CreatedDate.Year == date.Year &&
                 (
                     netItemCategoryIds.Contains(item.Category.Id) ||
-                    (
-                        item.Category.ParentCategoryId != null &&
-                        netItemCategoryIds.Contains(item.Category.ParentCategoryId.Value)
+                    netItemCategoryIds.Contains(item.Category.ParentCategoryId.GetValueOrDefault(Guid.Empty))
+                )
             )
-            )
-            )
-            .ToList()
+            .ToListAsync()
         ;
         var allItems = grossItems
             .Concat(netItems.Select(AsItemModel))
@@ -77,16 +65,19 @@ public class CustomRevenueService(
         ;
 
 
-        return _analyticsChartBuilder.Build(allItems, customNamedCategories, date);
+        return analyticsChartBuilder.Build(allItems, customNamedCategories, date);
     }
 
     private static Guid BuildCustomCategoryId(Guid categoryId) =>
         categoryId.ToString() switch
         {
-            Categories.RevenueString => Categories.CustomRevenue,
-            Categories.CashString => Guid.Parse("8bbce42f-f440-4784-8fe1-3c70da523a4e"),
-            Categories.TerminalString => Guid.Parse("a7748246-cd7d-4dcb-b217-5a5c100cf0a9"),
-            Categories.DeliveryString => Guid.Parse("e56f662d-696b-47ca-952e-fa2b9271584d"),
+            Categories.Revenue_String => Categories.CustomRevenue,
+            Categories.Cash_String => Categories.CustomRevenue_GrossCash,
+            Categories.Terminal_String => Categories.CustomRevenue_NetTerminal,
+            Categories.Delivery_String => Categories.CustomRevenue_NetDelivery,
+            Categories.Delivery_Wolt_String => Categories.CustomRevenue_NetDelivery,
+            Categories.Delivery_Bolt_String => Categories.CustomRevenue_NetDelivery,
+            Categories.Delivery_Glovo_String => Categories.CustomRevenue_NetDelivery,
             _ => throw new Exception($"No custom id for category '{categoryId}'"),
         }
     ;
@@ -95,13 +86,13 @@ public class CustomRevenueService(
         categoryId == null ? null : Categories.CustomRevenue
     ;
 
-    private static string BuildCustomCategoryName(string categoryId) =>
-        categoryId switch
+    private static string BuildCustomCategoryName(Guid categoryId) =>
+        categoryId.ToString() switch
         {
-            Categories.RevenueString => "Чистый Приход",
-            Categories.CashString => "Грязный Нал",
-            Categories.TerminalString => "Чистый Терминал",
-            Categories.DeliveryString => "Чистая Доставка",
+            Categories.CustomRevenue_String => "Чистый Приход",
+            Categories.CustomRevenue_GrossCash_String => "Грязный Нал",
+            Categories.CustomRevenue_NetTerminal_String => "Чистый Терминал",
+            Categories.CustomRevenue_NetDelivery_String => "Чистая Доставка",
             _ => throw new Exception($"No custom name for category '{categoryId}'"),
         }
     ;
@@ -117,4 +108,17 @@ public class CustomRevenueService(
             Category = customCategory,
         }
     ;
+
+    private static CategoryModel MapCategoryToCustomCategory(CategoryModel category)
+    {
+        var customCategoryId = BuildCustomCategoryId(category.Id);
+
+        return new()
+        {
+            Id = customCategoryId,
+            Name = BuildCustomCategoryName(customCategoryId),
+            IsIncome = category.IsIncome,
+            ParentCategoryId = BuildCustomCategoryParentId(category.ParentCategoryId),
+        };
+    }
 }
